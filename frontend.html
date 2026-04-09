@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Cloud Event Analytics Dashboard</title>
+
+<style>
+body {
+  margin: 0;
+  font-family: 'Segoe UI', sans-serif;
+  background: #0f172a;
+  color: white;
+  display: flex;
+}
+
+/* SIDEBAR */
+.sidebar {
+  width: 220px;
+  background: #020617;
+  padding: 20px;
+  height: 100vh;
+}
+
+.sidebar h2 {
+  font-size: 18px;
+  margin-bottom: 20px;
+}
+
+.sidebar p {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+/* MAIN */
+.main {
+  flex: 1;
+  padding: 20px;
+}
+
+/* HEADER */
+.header {
+  font-size: 22px;
+  margin-bottom: 20px;
+}
+
+/* GRID */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* CARD */
+.card {
+  background: #1e293b;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+}
+
+/* INPUT */
+input {
+  width: 95%;
+  padding: 10px;
+  margin-top: 10px;
+  border-radius: 6px;
+  border: none;
+}
+
+/* BUTTON */
+button {
+  margin-top: 10px;
+  padding: 10px;
+  width: 100%;
+  background: #e469d9;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #16a34a;
+}
+
+/* OUTPUT */
+.output {
+  margin-top: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+  background: black;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+/* STATUS */
+.status {
+  font-size: 20px;
+  font-weight: bold;
+}
+
+/* TABLE */
+table {
+  width: 100%;
+  margin-top: 10px;
+  border-collapse: collapse;
+}
+
+td, th {
+  border-bottom: 1px solid #334155;
+  padding: 8px;
+  text-align: left;
+}
+
+th {
+  color: #38bdf8;
+}
+</style>
+</head>
+
+<body>
+
+<!-- SIDEBAR -->
+<div class="sidebar">
+  <h2>📊 Dashboard</h2>
+  <p>Cloud Event System</p>
+  <p>Analytics</p>
+  <p>Monitoring</p>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <div class="header">🚀 Cloud Event Analytics Dashboard</div>
+
+  <div class="grid">
+
+    <!-- SEND EVENT -->
+    <div class="card">
+      <h3>📥 Generate User Activity</h3>
+
+      <input id="type" placeholder="Event Type (login, purchase)">
+      <input id="user" placeholder="User Name">
+
+      <button onclick="sendEvent()">Send Event</button>
+
+      <p id="msg"></p>
+    </div>
+
+    <!-- STATUS -->
+    <div class="card">
+      <h3>⚙️ System Health</h3>
+
+      <button onclick="checkStatus()">Check Status</button>
+
+      <p id="status" class="status">Unknown</p>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div class="card">
+      <h3>📊 Event Insights</h3>
+
+      <button onclick="loadData()">Load Events</button>
+      <button onclick="clearData()">Clear</button>
+
+      <div id="table"></div>
+    </div>
+
+    <!-- METRICS -->
+    <div class="card">
+      <h3>📈 Metrics Monitor</h3>
+
+      <button onclick="loadMetrics()">Load Metrics</button>
+
+      <div id="metrics" class="output">No metrics yet...</div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const BASE_URL = "http://127.0.0.1:8080";
+
+
+// 🔹 SEND EVENT
+async function sendEvent() {
+  const type = document.getElementById("type").value;
+  const user = document.getElementById("user").value;
+
+  try {
+    await fetch(BASE_URL + "/event/event", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({ type, user })
+    });
+
+    document.getElementById("msg").innerText = "✅ Event Sent";
+
+  } catch {
+    document.getElementById("msg").innerText = "❌ Failed";
+  }
+}
+
+
+// 🔹 LOAD DATA (TABLE FORMAT)
+async function loadData() {
+  try {
+    const res = await fetch(BASE_URL + "/analytics/analytics");
+    const data = await res.json();
+
+    let html = "<table><tr><th>User</th><th>Type</th></tr>";
+
+    data.events.forEach(e => {
+      html += `<tr><td>${e.user}</td><td>${e.type}</td></tr>`;
+    });
+
+    html += "</table>";
+
+    document.getElementById("table").innerHTML = html;
+
+  } catch {
+    document.getElementById("table").innerText = "❌ Error loading data";
+  }
+}
+
+
+// 🔹 CLEAR DATA VIEW
+function clearData() {
+  document.getElementById("table").innerHTML = "";
+}
+
+
+// 🔹 SYSTEM STATUS
+async function checkStatus() {
+  try {
+    const res = await fetch(BASE_URL + "/event/metrics");
+
+    if (res.ok) {
+      document.getElementById("status").innerText = "🟢 RUNNING";
+      document.getElementById("status").style.color = "lightgreen";
+    }
+
+  } catch {
+    document.getElementById("status").innerText = "🔴 DOWN";
+    document.getElementById("status").style.color = "red";
+  }
+}
+
+
+// 🔹 LOAD METRICS
+async function loadMetrics() {
+  try {
+    const res = await fetch(BASE_URL + "/event/metrics");
+    const text = await res.text();
+
+    document.getElementById("metrics").innerText = text;
+
+  } catch {
+    document.getElementById("metrics").innerText = "❌ Failed to load metrics";
+  }
+}
+
+</script>
+
+</body>
+</html>

@@ -1,0 +1,49 @@
+services:
+
+  auth-service:
+    build: ./auth-service
+
+  event-service:
+    build: ./event-service
+
+  worker:
+    build: ./worker
+
+  analytics-service:
+    build: ./analytics-service
+
+  api-gateway:
+    image: nginx
+    ports:
+      - "8080:80"
+    volumes:
+      - ./api-gateway/nginx.conf:/etc/nginx/nginx.conf
+    depends_on:
+      - auth-service
+      - event-service
+      - analytics-service
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  prometheus:
+    image: prom/prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    depends_on:
+      - event-service
+
+  grafana:
+    image: grafana/grafana
+    ports:
+      - "3000:3000"
